@@ -1,6 +1,13 @@
 local Translations = {
+    info = {
+        no_variants = "No variants available..",
+        already_wearing = "You are already wearing this item..",
+        NoNearPlayer = 'No player nearby..',
+        NoAction = 'No action available..',
+    },
+    --- Inventory
     progress = {
-        ['snowballs'] = 'Collecting snowballs..',
+        snowballs = 'Collecting snowballs..',
     },
     notify = {
         ['failed'] = 'Failed',

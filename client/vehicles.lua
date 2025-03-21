@@ -33,7 +33,13 @@ QBCore.Functions.CreateClientCallback('qb-inventory:client:vehicleCheck', functi
 
     -- Glovebox
     local inVehicle = GetVehiclePedIsIn(ped, false)
-    if inVehicle ~= 0 then
+    local allowed
+    if GetPedInVehicleSeat(GetVehiclePedIsIn(ped), -1) == ped or GetPedInVehicleSeat(GetVehiclePedIsIn(ped), 0) == ped then
+        allowed = true
+    else
+        allowed = false
+    end
+    if inVehicle ~= 0 and allowed then
         local plate = GetVehicleNumberPlateText(inVehicle)
         local class = GetVehicleClass(inVehicle)
         local inventory = 'glovebox-' .. plate
@@ -62,4 +68,15 @@ QBCore.Functions.CreateClientCallback('qb-inventory:client:vehicleCheck', functi
         end
     end
     cb(nil)
+end)
+
+RegisterCommand('conducir', function ()
+    local ped = PlayerPedId()
+    local vehicle = GetVehiclePedIsIn(ped, false)
+    local driver = GetPedInVehicleSeat(vehicle, -1)
+
+    if driver == 0 then
+        TaskWarpPedIntoVehicle(ped, vehicle, -1)
+    end
+
 end)

@@ -2,6 +2,17 @@ QBCore = exports['qb-core']:GetCoreObject()
 Inventories = {}
 Drops = {}
 RegisteredShops = {}
+--Hennus
+
+local function parse_items(items)
+    local parsed_items = {}
+    for k, v in pairs(items) do
+        if v then
+            parsed_items[tonumber(v.slot)] = v
+        end
+    end
+    return parsed_items
+end
 
 CreateThread(function()
     MySQL.query('SELECT * FROM inventories', {}, function(result)
@@ -9,8 +20,10 @@ CreateThread(function()
             for i = 1, #result do
                 local inventory = result[i]
                 local cacheKey = inventory.identifier
+                local fixitems = parse_items(json.decode(inventory.items)) or {}
                 Inventories[cacheKey] = {
-                    items = json.decode(inventory.items) or {},
+                    items = fixitems,
+                    maxweight = tonumber(inventory.weight) or 100000,
                     isOpen = false
                 }
             end
@@ -42,12 +55,37 @@ AddEventHandler('playerDropped', function()
     end
 end)
 
+function parse_save(items)
+    local parsed_items = {}
+    for k, v in pairs(items) do
+        if v then
+            table.insert(parsed_items, v)
+        end
+    end
+    return parsed_items
+
+end
+
 AddEventHandler('txAdmin:events:serverShuttingDown', function()
     for inventory, data in pairs(Inventories) do
         if data.isOpen then
-            MySQL.prepare('INSERT INTO inventories (identifier, items) VALUES (?, ?) ON DUPLICATE KEY UPDATE items = ?', { inventory, json.encode(data.items), json.encode(data.items) })
+            local items = parse_save(data.items)
+            MySQL.prepare('INSERT INTO inventories (identifier, items, weight) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE items = ?, weight = ?', 
+            { inventory, json.encode(items), tonumber(data.maxweight) , json.encode(items), tonumber(data.maxweight) })
         end
     end
+end)
+
+--- on resurce stop
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    print ('^3 It is not a good idea to restart the qb-inventory on publicly accessible servers.^0')
+    for inventory, data in pairs(Inventories) do
+        local items = parse_save(data.items)
+        MySQL.prepare('INSERT INTO inventories (identifier, items, weight) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE items = ?, weight = ?', 
+        { inventory, json.encode(items), tonumber(data.maxweight) , json.encode(items), tonumber(data.maxweight) })
+    end
+    print('^2 All inventories saved^0')
 end)
 
 RegisterNetEvent('QBCore:Server:UpdateObject', function()
@@ -154,9 +192,10 @@ RegisterNetEvent('qb-inventory:server:closeInventory', function(inventory)
     local src = source
     local QBPlayer = QBCore.Functions.GetPlayer(src)
     if not QBPlayer then return end
+   -- print ('^1[qb-inventory] Error: ^3closeInventory', json.encode(inventory, { indent = true }), '^0')
     Player(source).state.inv_busy = false
-    if inventory:find('shop%-') then return end
-    if inventory:find('otherplayer%-') then
+    if inventory:match('shop%-') then return end
+    if inventory:match('otherplayer%-') then
         local targetId = tonumber(inventory:match('otherplayer%-(.+)'))
         Player(targetId).state.inv_busy = false
         return
@@ -185,54 +224,6 @@ RegisterNetEvent('qb-inventory:server:useItem', function(item)
     if itemData.type == 'weapon' then
         TriggerClientEvent('qb-weapons:client:UseWeapon', src, itemData, itemData.info.quality and itemData.info.quality > 0)
         TriggerClientEvent('qb-inventory:client:ItemBox', src, itemInfo, 'use')
-    elseif itemData.name == 'id_card' then
-        UseItem(itemData.name, src, itemData)
-        TriggerClientEvent('qb-inventory:client:ItemBox', source, itemInfo, 'use')
-        local playerPed = GetPlayerPed(src)
-        local playerCoords = GetEntityCoords(playerPed)
-        local players = QBCore.Functions.GetPlayers()
-        local gender = item.info.gender == 0 and 'Male' or 'Female'
-        for _, v in pairs(players) do
-            local targetPed = GetPlayerPed(v)
-            local dist = #(playerCoords - GetEntityCoords(targetPed))
-            if dist < 3.0 then
-                TriggerClientEvent('chat:addMessage', v, {
-                    template = '<div class="chat-message advert" style="background: linear-gradient(to right, rgba(5, 5, 5, 0.6), #74807c); display: flex;"><div style="margin-right: 10px;"><i class="far fa-id-card" style="height: 100%;"></i><strong> {0}</strong><br> <strong>Civ ID:</strong> {1} <br><strong>First Name:</strong> {2} <br><strong>Last Name:</strong> {3} <br><strong>Birthdate:</strong> {4} <br><strong>Gender:</strong> {5} <br><strong>Nationality:</strong> {6}</div></div>',
-                    args = {
-                        'ID Card',
-                        item.info.citizenid,
-                        item.info.firstname,
-                        item.info.lastname,
-                        item.info.birthdate,
-                        gender,
-                        item.info.nationality
-                    }
-                })
-            end
-        end
-    elseif itemData.name == 'driver_license' then
-        UseItem(itemData.name, src, itemData)
-        TriggerClientEvent('qb-inventory:client:ItemBox', src, itemInfo, 'use')
-        local playerPed = GetPlayerPed(src)
-        local playerCoords = GetEntityCoords(playerPed)
-        local players = QBCore.Functions.GetPlayers()
-        for _, v in pairs(players) do
-            local targetPed = GetPlayerPed(v)
-            local dist = #(playerCoords - GetEntityCoords(targetPed))
-            if dist < 3.0 then
-                TriggerClientEvent('chat:addMessage', v, {
-                    template = '<div class="chat-message advert" style="background: linear-gradient(to right, rgba(5, 5, 5, 0.6), #657175); display: flex;"><div style="margin-right: 10px;"><i class="far fa-id-card" style="height: 100%;"></i><strong> {0}</strong><br> <strong>First Name:</strong> {1} <br><strong>Last Name:</strong> {2} <br><strong>Birth Date:</strong> {3} <br><strong>Licenses:</strong> {4}</div></div>',
-                    args = {
-                        'Drivers License',
-                        item.info.firstname,
-                        item.info.lastname,
-                        item.info.birthdate,
-                        item.info.type
-                    }
-                }
-                )
-            end
-        end
     else
         UseItem(itemData.name, src, itemData)
         TriggerClientEvent('qb-inventory:client:ItemBox', src, itemInfo, 'use')
@@ -262,6 +253,7 @@ RegisterNetEvent('qb-inventory:server:openDrop', function(dropId)
 end)
 
 RegisterNetEvent('qb-inventory:server:updateDrop', function(dropId, coords)
+    if not Drops[dropId] then return end
     Drops[dropId].coords = coords
 end)
 
@@ -325,8 +317,15 @@ end)
 
 QBCore.Functions.CreateCallback('qb-inventory:server:attemptPurchase', function(source, cb, data)
     local itemInfo = data.item
+    if not itemInfo or not itemInfo.price  then
+        --test hakos 2021-09-07
+        print ('^1[qb-inventory] Error: ^3itemInfo or itemInfo.price is nil', json.encode(data, { indent = true }), '^0')
+        cb(false)
+        return
+    end
     local amount = data.amount
     local shop = string.gsub(data.shop, 'shop%-', '')
+    local price = itemInfo.price * amount
     local Player = QBCore.Functions.GetPlayer(source)
 
     if not Player then
@@ -350,24 +349,12 @@ QBCore.Functions.CreateCallback('qb-inventory:server:attemptPurchase', function(
         end
     end
 
-    if shopInfo.items[itemInfo.slot].name ~= itemInfo.name then -- Check if item name passed is the same as the item in that slot
-        cb(false)
-        return
-    end
-
-    if amount > shopInfo.items[itemInfo.slot].amount then
-        TriggerClientEvent('QBCore:Notify', source, 'Cannot purchase larger quantity than currently in stock', 'error')
-        cb(false)
-        return
-    end
-
     if not CanAddItem(source, itemInfo.name, amount) then
         TriggerClientEvent('QBCore:Notify', source, 'Cannot hold item', 'error')
         cb(false)
         return
     end
 
-    local price = shopInfo.items[itemInfo.slot].price * amount
     if Player.PlayerData.money.cash >= price then
         Player.Functions.RemoveMoney('cash', price, 'shop-purchase')
         AddItem(source, itemInfo.name, amount, nil, itemInfo.info, 'shop-purchase')
@@ -449,34 +436,22 @@ end)
 -- Item move logic
 
 local function getItem(inventoryId, src, slot)
-    local items = {}
+    local item
     if inventoryId == 'player' then
         local Player = QBCore.Functions.GetPlayer(src)
-        if Player and Player.PlayerData.items then
-            items = Player.PlayerData.items
-        end
+        item = Player.PlayerData.items[slot]
     elseif inventoryId:find('otherplayer-') then
         local targetId = tonumber(inventoryId:match('otherplayer%-(.+)'))
         local targetPlayer = QBCore.Functions.GetPlayer(targetId)
-        if targetPlayer and targetPlayer.PlayerData.items then
-            items = targetPlayer.PlayerData.items
+        if targetPlayer then
+            item = targetPlayer.PlayerData.items[slot]
         end
-    elseif inventoryId:find('drop-') == 1 then
-        if Drops[inventoryId] and Drops[inventoryId]['items'] then
-            items = Drops[inventoryId]['items']
-        end
+     elseif inventoryId:find('drop-') == 1 then
+        item = Drops[inventoryId]['items'][slot]
     else
-        if Inventories[inventoryId] and Inventories[inventoryId]['items'] then
-            items = Inventories[inventoryId]['items']
-        end
+        item = Inventories[inventoryId]['items'][slot]
     end
-
-    for _, item in pairs(items) do
-        if item.slot == slot then
-            return item
-        end
-    end
-    return nil
+    return item
 end
 
 local function getIdentifier(inventoryId, src)
@@ -531,5 +506,55 @@ RegisterNetEvent('qb-inventory:server:SetInventoryData', function(fromInventory,
                 end
             end
         end
+    end
+end)
+
+RegisterNetEvent('qb-inventory:server:thief', function(targetid)
+    local src = source 
+    if not tonumber(targetid) then return end
+    OpenInventoryById(src, tonumber(targetid))
+end)
+
+--- compatibility old version
+exports("GetStash", function(stashId)
+   -- print(json.encode(Inventories[stashId], { indent = true }))
+--    local file = debug.getinfo(2).source
+--    local line = debug.getinfo(2).currentline
+--    print(" GetStash File: " .. file .. " | Line: " .. line)
+    return Inventories[stashId] or  InitializeInventory(stashId, {})
+end)
+
+exports('GetStashItems', function(stashId)
+    local file = debug.getinfo(2).source
+    local line = debug.getinfo(2).currentline
+    print("GetStash File: " .. file .. " | Line: " .. line)
+    print ('stashId: ' .. stashId)
+    return not Inventories[stashId] and  InitializeInventory(stashId, {}).items  or Inventories[stashId].items
+end)
+
+
+RegisterServerEvent('qb-inventory:server:SaveStashItems', function(stashId, items)
+	if Inventories[stashId] then
+		Inventories[stashId].items = parse_items(items)
+    else
+        Inventories[stashId] = InitializeInventory(stashId, {items = parse_items(items) }) or {}
+	end
+end)
+
+--- origen masterjob
+
+QBCore.Functions.CreateCallback('qb-inventory:server:GetStashItems', function(source, cb, stashId)
+    local Player = QBCore.Functions.GetPlayer(source)
+    if not Player then
+        cb(false)
+        return
+    end
+    if Inventories[stashId] then
+        cb(Inventories[stashId].items)
+    else
+        -- get resource and line call back 
+        print('Error: ' .. debug.getinfo(2).short_src .. ' line: ' .. debug.getinfo(2).currentline .. ' Stash not found')
+        Inventories[stashId] = InitializeInventory(stashId, {})
+        cb(Inventories[stashId].items)
     end
 end)

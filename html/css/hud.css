@@ -1,0 +1,36 @@
+.hud {
+    position: absolute;
+    height: auto;
+    width: 3vh;
+    background: #201600b0;
+    top: 0vh;
+    left: 0%;
+    align-items: center;
+    align-content: center;
+    display: none;
+    flex-direction: column;
+    transform: translateX(-100%);
+    color: aliceblue;
+    border-radius: 0.5vh;
+    padding: 2px;
+    box-shadow: 2px 5px 10px 1px #1b1b1bc9;
+    border: 1px solid #353535c9;
+}
+
+.vertical-progress-bar {
+    width: 1vh; /* Ancho de la barra de progreso */
+    height: 6.5vh; /* Altura de la barra de progreso */
+    background-color: #1f170094; /* Color de fondo */
+    border-radius: 10px; /* Bordes redondeados */
+    overflow: hidden; /* Ocultar el desbordamiento */
+    position: relative; /* Posicionamiento relativo */
+    margin: 0.5vh; /* Margen opcional */
+    border: 1px solid #525252c9;
+}
+
+.progress-bar {
+    width: 100%; /* Ancho completo */
+    background-color: #c7a200; /* Color de la barra de progreso */
+    position: absolute; /* Posicionamiento absoluto */
+    top: 0; /* AlineaciÃ³n en la parte inferior */
+}

@@ -118,7 +118,7 @@ RegisterCommand('inventory', function(source)
     if not QBPlayer then return end
     if not QBPlayer or QBPlayer.PlayerData.metadata['isdead'] or QBPlayer.PlayerData.metadata['inlaststand'] or QBPlayer.PlayerData.metadata['ishandcuffed'] then return end
     QBCore.Functions.TriggerClientCallback('qb-inventory:client:vehicleCheck', source, function(inventory, class)
-        if not inventory then return OpenInventory(source) end
+        if not inventory or class == 13 or (inventory:match('trunk') and class == 8) then return OpenInventory(source) end
         if inventory:find('trunk-') then
             OpenInventory(source, inventory, {
                 slots = VehicleStorage[class] and VehicleStorage[class].trunkSlots or VehicleStorage.default.slots,

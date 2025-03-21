@@ -1,0 +1,158 @@
+.action-bar {
+    /* position: absolute; */
+    top: 0;
+    right: 0.5vh;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5vh;
+    width: auto;
+    /* transform: translateY(-91%); */
+    height: 2.5vh;
+    cursor: pointer;
+    transition: 0.5s var(--cubic) all;
+    place-content: end;
+    place-items: center;
+    margin-right: 0.5vh;
+}
+
+
+.action-bar .btn {
+    padding: 0.8vh;
+    align-items: center;
+    /* color: #ffffff; */
+    background: #e5077b;
+    border-radius: 1vh;
+    width: 2.5vh;
+    transition: 0.5s var(--cubic) all;
+    /* box-shadow: 0.3vh 0.3vh #fff; */
+    text-align: center;
+}
+
+.action-bar .btn:hover {
+    transform: scale(1.1);
+    background-color: #fff;
+}
+
+.fa-xs {
+    font-size: 1.5vh;
+    line-height: .08333em;
+    vertical-align: 0.125em;
+}
+
+.fa-xs:hover {
+    font-size: 1.5vh;
+    line-height: .08333em;
+    vertical-align: 0.125em;
+}
+
+.addon-mennu {
+    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 1vh; /* Espacio entre las celdas */
+    padding: 0.5vh;
+    align-content: flex-start;
+    width: 100%;
+    height: auto;
+    max-height: 34.3vh;
+    overflow: hidden;
+    overflow-Y: scroll;
+}
+
+.addon-mennu .btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 10.5vh;
+    height: 10vh;
+    background: #ff9bae52 !important;
+    border-radius: 0.5vh;
+    /* box-shadow: inset 0  5px 5px rgba(0, 0, 0, 0.87), 0 2px 2px rgb(0, 0, 0); */
+    overflow: hidden;
+    transition: 500ms;
+}
+
+.addon-mennu .btn:hover {
+    background: #ffbf00;
+
+    transform: scale(1.1);
+}
+
+.addon-mennu .btn img {
+    width: auto;
+    height: 62%;
+    transform: translateY(1vh);
+    border-radius: 0.5vh;
+}
+
+.addon-mennu .btn p {
+    display: block;
+    text-align: center;
+    font-size: 1.5vh;
+    width: 11vh;
+    color: aliceblue;
+    transform: translateY(1vh);
+    font-weight: bold;
+}
+
+.reset-clothes {
+    /* position: absolute; */
+    left: 0;
+    bottom: -0.7vh;
+    padding: 0.2vh 0.7vh;
+    align-items: center;
+    border-radius: 0.8vh;
+}
+
+.reset-clothes:hover {
+    background: linear-gradient(180deg, #000000d9 0%, #000000 100%);
+}
+
+.persona-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5vh;
+    height: auto;
+    gap: 0.5vh;
+    width: auto;
+}
+
+.persona-actions .btn {
+    padding: 0.2vh 0.7vh;
+    align-items: center;
+    color: #ffffff;
+    border-radius: 0.8vh;
+}
+
+.persona-actions .btn:hover {
+    background: linear-gradient(180deg, #000000d9 0%, #000000 100%);
+}
+
+.addon-person {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    border-radius: 0.5vh;
+}
+
+.addon-person .btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    height: auto;
+    background: #f1c1307c;
+    border-radius: 0.5vh;
+    padding: 0.7vh;
+    margin: 0.5vh;
+    overflow: hidden;
+    transition: 500ms;
+
+}

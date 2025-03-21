@@ -1,6 +1,6 @@
 QBCore = exports['qb-core']:GetCoreObject()
-PlayerData = nil
 local hotbarShown = false
+-- hennus
 
 -- Handlers
 
@@ -8,11 +8,12 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     LocalPlayer.state:set('inv_busy', false, true)
     PlayerData = QBCore.Functions.GetPlayerData()
     GetDrops()
+    SetHungry()
 end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
     LocalPlayer.state:set('inv_busy', true, true)
-    PlayerData = nil
+    PlayerData = {}
 end)
 
 RegisterNetEvent('QBCore:Client:UpdateObject', function()
@@ -79,21 +80,19 @@ function HasItem(items, amount)
         for _ in pairs(items) do totalItems = totalItems + 1 end
     end
 
-    if PlayerData and type(PlayerData.items) == "table" then
-        for _, itemData in pairs(PlayerData.items) do
-            if isTable then
-                for k, v in pairs(items) do
-                    if itemData and itemData.name == (isArray and v or k) and ((amount and itemData.amount >= amount) or (not isArray and itemData.amount >= v) or (not amount and isArray)) then
-                        count = count + 1
-                        if count == totalItems then
-                            return true
-                        end
+    for _, itemData in pairs(PlayerData.items) do
+        if isTable then
+            for k, v in pairs(items) do
+                if itemData and itemData.name == (isArray and v or k) and ((amount and itemData.amount >= amount) or (not isArray and itemData.amount >= v) or (not amount and isArray)) then
+                    count = count + 1
+                    if count == totalItems then
+                        return true
                     end
                 end
-            else -- Single item as string
-                if itemData and itemData.name == items and (not amount or (itemData and amount and itemData.amount >= amount)) then
-                    return true
-                end
+            end
+        else -- Single item as string
+            if itemData and itemData.name == items and (not amount or (itemData and amount and itemData.amount >= amount)) then
+                return true
             end
         end
     end
@@ -102,6 +101,7 @@ function HasItem(items, amount)
 end
 
 exports('HasItem', HasItem)
+
 
 -- Events
 
@@ -140,14 +140,9 @@ RegisterNetEvent('qb-inventory:client:closeInv', function()
 end)
 
 RegisterNetEvent('qb-inventory:client:updateInventory', function()
-    local items = {}
-    if PlayerData and type(PlayerData.items) == "table" then
-        items = PlayerData.items
-    end
-
     SendNUIMessage({
         action = 'update',
-        inventory = items
+        inventory = PlayerData.items
     })
 end)
 
@@ -168,13 +163,19 @@ RegisterNetEvent('qb-inventory:server:RobPlayer', function(TargetId)
 end)
 
 RegisterNetEvent('qb-inventory:client:openInventory', function(items, other)
-    SetNuiFocus(true, true)
+    displayFocus(true)
+    local veh = GetVehiclePedIsIn(PlayerPedId(), false)
+    local vehType = GetVehicleClass(veh)
+    if vehType == 13 then other = false end
     SendNUIMessage({
         action = 'open',
         inventory = items,
         slots = Config.MaxSlots,
         maxweight = Config.MaxWeight,
-        other = other
+        other = other,
+        hub = GetStats(),
+        radio = exports['qb-inventory']:HasItem('radio', 1),
+        isVehicle = veh,
     })
 end)
 
@@ -198,7 +199,7 @@ RegisterNUICallback('AttemptPurchase', function(data, cb)
 end)
 
 RegisterNUICallback('CloseInventory', function(data, cb)
-    SetNuiFocus(false, false)
+    displayFocus(false)
     if data.name then
         if data.name:find('trunk-') then
             CloseTrunk()
@@ -233,13 +234,18 @@ RegisterNUICallback('GiveItem', function(data, cb)
         cb(false)
     end
 end)
-
 RegisterNUICallback('GetWeaponData', function(cData, cb)
     local data = {
         WeaponData = QBCore.Shared.Items[cData.weapon],
         AttachmentData = FormatWeaponAttachments(cData.ItemData)
     }
     cb(data)
+end)
+
+RegisterNUICallback('togleInput', function(data, cb)
+    -- nuifocuskeepinput
+    SetNuiFocusKeepInput(data)
+    cb('ok')
 end)
 
 RegisterNUICallback('RemoveAttachment', function(data, cb)
@@ -291,6 +297,12 @@ CreateThread(function()
         },
         distance = 2.5
     })
+
+    if QBCore.Functions.GetPlayerData().job?.name then
+        LocalPlayer.state:set('inv_busy', false, true)
+        PlayerData = QBCore.Functions.GetPlayerData()
+        GetDrops()
+    end
 end)
 
 -- Commands
@@ -309,7 +321,7 @@ for i = 1, 5 do
         local itemData = PlayerData.items[i]
         if not itemData then return end
         if itemData.type == "weapon" then
-            if HoldingDrop then
+            if holdingDrop then
                 return QBCore.Functions.Notify("Your already holding a bag, Go Drop it!", "error", 5500)
             end
         end

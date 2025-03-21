@@ -21,13 +21,13 @@ VehicleStorage = {
         gloveboxSlots = 5,
         gloveboxWeight = 10000,
         trunkSlots = 50,
-        trunkWeight = 75000
+        maxWeight = 75000
     },
     [3] = { -- Coupes
         gloveboxSlots = 5,
         gloveboxWeight = 10000,
         trunkSlots = 35,
-        trunkWeight = 42000
+        maxWeight = 42000
     },
     [4] = { -- Muscle
         gloveboxSlots = 5,
@@ -95,42 +95,12 @@ VehicleStorage = {
         trunkSlots = 50,
         trunkWeight = 120000
     },
-    [17] = { -- service
-        gloveboxSlots = 0,
-        gloveboxWeight = 0,
-        trunkSlots = 0,
-        trunkWeight = 0
-    },
-    [18] = { -- Emergency
-        gloveboxSlots = 4,
-        gloveboxWeight = 10000,
-        trunkSlots = 12,
-        trunkWeight = 150000
-    },
-    [19] = { -- Military
-        gloveboxSlots = 0,
-        gloveboxWeight = 0,
-        trunkSlots = 0,
-        trunkWeight = 0
-    },
-    [20] = { -- Commercial
-        gloveboxSlots = 0,
-        gloveboxWeight = 0,
-        trunkSlots = 0,
-        trunkWeight = 0
-    },
-    [21] = { -- trains
-        gloveboxSlots = 0,
-        gloveboxWeight = 0,
-        trunkSlots = 0,
-        trunkWeight = 0
-    },
-    [22] = { -- Commercial
-        gloveboxSlots = 0,
-        gloveboxWeight = 0,
-        trunkSlots = 0,
-        trunkWeight = 0
-    },
+    [17] = { -- vip
+    gloveboxSlots = 5,
+    gloveboxWeight = 10000,
+    trunkSlots = 25,
+    trunkWeight = 30000
+    }
 }
 
 BackEngineVehicles = {

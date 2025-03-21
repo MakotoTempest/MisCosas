@@ -4,9 +4,10 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>QB Inventory</title>
-        <link rel="stylesheet" href="main.css" />
+        <link rel="stylesheet" href="css/main.css" />
         <link rel="stylesheet" href="https://unpkg.com/floating-vue@5.2.2/dist/style.css" />
-        <script src="https://kit.fontawesome.com/d37231be1f.js" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://kit.fontawesome.com/6058de7038.js" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@floating-ui/core@1.6.0"></script>
         <script src="https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.6.1"></script>
@@ -16,106 +17,347 @@
     </head>
     <body>
         <div id="app">
-            <div class="inventory-container" v-if="isInventoryOpen" @mousemove="drag" @mouseup="endDrag" @mousedown="containerMouseDownAction">
-                <div class="inventory-section player-inventory-section" :class="{ 'centered-inventory-section': shouldCenterInventory }">
-                    <div class="inventory-header">
-                        <div class="labels-container">
-                            <div class="inventory-label">
-                                <p>{{ inventoryLabel }}</p>
+            <div class="inventory-container" v-if="isInventoryOpen" @mousemove="drag" @mouseup="endDrag" @mousedown="containerMouseDownAction">                
+                <div class="main_inv">
+                    <div class="inv_container">
+                        <div class="action-bar">
+                            <div class="btn" @click="HnActionsBar('person')">
+                                <i class="fa-solid fa-person-breastfeeding fa-xl"></i>
                             </div>
-                            <div class="current-weight">
-                                <p>{{ (playerWeight / 1000).toFixed(1) }} / {{ (maxWeight / 1000).toFixed(1) }}</p>
+                            <!-- <div class="btn" @click="HnActionsBar('anims')">
+                                <i class="fa-solid fa-users fa-xs"></i>
+                                Hennus
                             </div>
-                        </div>
-                        <div class="weight-bar">
-                            <div class="weight-bar-fill" :style="{ width: Math.min((playerWeight / maxWeight) * 100, 100) + '%' }" :class="weightBarClass"></div>
-                        </div>
-                    </div>
-                    <div class="inventory-grid">
-                        <div class="item-grid">
-                            <div v-for="slot in totalSlots" :key="slot" class="item-slot" :data-slot="slot" :class="{ 'invalid-slot-highlight': errorSlot === slot }" @dblclick="getItemInSlot(slot, 'player') && useItem(getItemInSlot(slot, 'player'))" @mousedown="event => handleMouseDown(event, slot, 'player')">
-                                <div class="item-slot-key" v-if="slot <= 5">
-                                    <p>{{ slot }}</p>
-                                </div>
-                                <div class="item-slot-img" v-if="getItemInSlot(slot, 'player')" v-tooltip.right-end="{content: generateTooltipContent(getItemInSlot(slot, 'player')), html: true}">
-                                    <img :src="'images/' + getItemInSlot(slot, 'player').image" alt="" />
-                                </div>
-                                <div class="item-slot-amount" v-if="getItemInSlot(slot, 'player')">
-                                    <p>x{{ getItemInSlot(slot, 'player').amount }}</p>
-                                </div>
-                                <div class="item-slot-durability" v-if="getItemInSlot(slot, 'player')">
-                                    <div
-                                        class="item-slot-durability-fill"
-                                        v-if="getItemInSlot(slot, 'player').info && 'quality' in getItemInSlot(slot, 'player').info"
-                                        :style="{ width: (getItemInSlot(slot, 'player').info.quality / 100) * 100 + '%' }"
-                                        :class="{
-                                            'high': getItemInSlot(slot, 'player').info.quality > 75,
-                                            'medium': getItemInSlot(slot, 'player').info.quality <= 75 && getItemInSlot(slot, 'player').info.quality > 25,
-                                            'low': getItemInSlot(slot, 'player').info.quality <= 25
-                                        }"
-                                    ></div>
-                                    <div class="item-slot-durability-fill" v-else style="width: 0%"></div>
-                                </div>
-                                <!-- <div class="item-slot-label" v-if="getItemInSlot(slot, 'player')">
-                                    <p>{{ getItemInSlot(slot, 'player').label }}</p>
-                                </div> -->
+                            <div class="btn" @click="HnActionsBar('work')">
+                                <i class="fa-solid fa-briefcase fa-xs"></i>
                             </div>
+                            <div class="btn" @click="HnActionsBar('ilegal')">
+                                <i class="fa-solid fa-gun fa-xs"></i>
+                            </div>
+                            <div v-if="radio" class="btn"  @click="HnActionsBar('radio')">
+                                <i class="fa-solid fa-walkie-talkie fa-xs"></i>
+                            </div> -->
                         </div>
-                    </div>
-                </div>
+                        <div class="ply-head-bg ">
+                            <img class="logo" src="assets/logo.png" alt="" />
+                            <div class="player-inventory-header" :class="{ 'centered-inventory-header': !shouldCenterInventory }" v-if="!isAddonOpen">
 
-                <div class="input-container" v-if="!isOtherInventoryEmpty">
-                    <div class="input-wrapper">
-                        <input type="number" v-model="transferAmount" min="1" :placeholder="transferAmount === null ? 'amount' : ''" />
-                        <button @click="clearTransferAmount" class="clear-button">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
+                                <!--<div class="input-container" v-if="isOtherInventoryEmpty">-->
+                                <div class="labels-container">
+                                    <div class="inventory-label">
+                                        <p>{{ inventoryLabel }}</p>
+                                    </div>
+                                    <div class="current-weight">
+                                        <p>{{ (playerWeight / 1000).toFixed(1) }} / {{ (maxWeight / 1000).toFixed(1) }}</p>
+                                    </div>
+                                    <div class="input-container">
+                                        <div class="input-wrapper">
+                                            <input type="number" v-model="transferAmount" min="1" :placeholder="transferAmount === null ? 'amount' : ''"
+                                            @focus="ToggleFocusKeep(false)"
+                                            @blur="ToggleFocusKeep(true)" />
+                                            <button @click="clearTransferAmount" class="clear-button">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="weight-bar">
+                                    <div class="weight-bar-fill" :style="{ width: Math.min((playerWeight / maxWeight) * 100, 100) + '%' }" :class="weightBarClass"></div>
+                                </div>
+                            </div>
+                            <div class="player-inventory-header" v-if="isAddonOpen">
+                                <div class="labels-container" v-if="isAddonOpen">
+                                    <div class="inventory-label">
+                                        <p>{{ AddonHeaderLabel }}</p>
+                                    </div>
+                                    <div class="reset-clothes" @click="Clothing('reset')">
+                                        <i class="fa-solid fa-sync"></i>
+                                    </div>
+                                    <div class="persona-actions">
+                                        <div class="btn" @click="HnActionsBar('clothes')">
+                                            <i class="fa-solid fa-shirt"></i>
+                                        </div>
+                                        <div class="btn" @click="HnActionsBar('person', true)">
+                                            <i class="fa-solid fa-person-breastfeeding fa-sm"></i>
+                                        </div>
+                                        <div class="btn" @click="HnActionsBar('car')" v-if="isVehicle">
+                                            <i class="fa-solid fa-car"></i>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ply-bg">
 
-                <!-- Other Inventory Section -->
-                <div class="inventory-section other-inventory-section" v-if="!isOtherInventoryEmpty">
-                    <div class="inventory-header">
-                        <div class="labels-container">
-                            <div class="inventory-label">
-                                <p>{{ otherInventoryLabel }}</p>
+                            <div class="player-inventory" :class="{ 'centered-player-inventory': shouldCenterInventory }" v-if="!isAddonOpen">
+                                <div class="item-grid">
+                                    <div v-for="slot in totalSlots" :key="slot" class="item-slot"
+                                        :data-slot="slot"
+                                        :class="[{ 'invalid-slot-highlight': errorSlot === slot }, { 'special-slot': slot <= 5 }]"
+                                        @dblclick="getItemInSlot(slot, 'player') && useItem(getItemInSlot(slot, 'player'))"
+                                        @mousedown="event => handleMouseDown(event, slot, 'player')">
+
+                                        <!-- Mostrar el número solo si el slot está vacío y es uno de los primeros 5 -->
+                                        <div class="item-slot-key" v-if="slot <= 5 && !getItemInSlot(slot, 'player')">
+                                            <p>{{ slot }}</p>
+                                        </div>
+
+                                        <div class="item-slot-img" v-if="getItemInSlot(slot, 'player')" v-tooltip.right-end="{content: generateTooltipContent(getItemInSlot(slot, 'player')), html: true}">
+                                            <img :src="'images/' + getItemInSlot(slot, 'player').image" alt="" />
+                                        </div>
+
+                                        <div class="item-slot-amount" v-if="getItemInSlot(slot, 'player')">
+                                            <p>{{ getItemInSlot(slot, 'player').amount }}</p>
+                                        </div>
+
+                                        <div class="item-slot-durability" v-if="getItemInSlot(slot, 'player')">
+                                            <div
+                                                class="item-slot-durability-fill"
+                                                v-if="getItemInSlot(slot, 'player').info && 'quality' in getItemInSlot(slot, 'player').info"
+                                                :style="{ width: (getItemInSlot(slot, 'player').info.quality / 100) * 100 + '%' }"
+                                                :class="{
+                                                    'high': getItemInSlot(slot, 'player').info.quality > 75,
+                                                    'medium': getItemInSlot(slot, 'player').info.quality <= 75 && getItemInSlot(slot, 'player').info.quality > 25,
+                                                    'low': getItemInSlot(slot, 'player').info.quality <= 25
+                                                }"
+                                            ></div>
+                                            <div class="item-slot-durability-fill" v-else style="width: 0%"></div>
+                                        </div>
+
+                                        <!-- <div class="item-slot-label" v-if="getItemInSlot(slot, 'player')">
+                                            <p>{{ getItemInSlot(slot, 'player').label }}</p>
+                                        </div> -->
+                                    </div>
+                                </div>
+
                             </div>
-                            <div class="current-weight">
-                                <p>{{ (otherInventoryWeight / 1000).toFixed(1) }} / {{(otherInventoryMaxWeight / 1000).toFixed(1) }}</p>
+                            <div class="addon-mennu" v-if="isAddonOpen && AddonID == 'clothes'">
+                                <div class="btn" @click="Clothing('mask')">
+                                    <img src="assets/mask.png">
+                                    <p>Mascara</p>
+                                </div>
+                                <div class="btn" @click="Clothing('hat')">
+                                    <img src="assets/hat.png">
+                                    <p>Sombrero</p>
+                                </div>
+                                <div class="btn"  @click="Clothing('shirt')">
+                                    <img src="assets/t-shirt.png">
+                                    <p>Camiseta</p>
+                                </div>
+                                <div class="btn" @click="Clothing('jacket')">
+                                    <img src="assets/jacket.png">
+                                    <p>Chaqueta</p>
+                                </div>
+                                <div class="btn" @click="Clothing('vest')">
+                                    <img src="assets/vest.png">
+                                    <p>Chaleco</p>
+                                </div>
+                                <div class="btn" @click="Clothing('pants')">
+                                    <img src="assets/jeans.png">
+                                    <p>Pantalones</p>
+                                </div>
+                                <div class="btn" @click="Clothing('shoes')">
+                                    <img src="assets/shoes.png">
+                                    <p>Zapatos</p>
+                                </div>
+                                <div class="btn" @click="Clothing('watch')">
+                                    <img src="assets/clock.png">
+                                    <p>Reloj</p>
+                                </div>
+                                <div class="btn" @click="Clothing('bracelet')">
+                                    <img src="assets/bracelet.png">
+                                    <p>Bracalete</p>
+                                </div>
+                                <div class="btn" @click="Clothing('neck')">
+                                    <img src="assets/chain.png">
+                                    <p>Cadena</p>
+                                </div>
+                                <div class="btn" @click="Clothing('gloves')">
+                                    <img src="assets/gloves.png">
+                                    <p>Guantes</p>
+                                </div>
+                                <div class="btn" @click="Clothing('hair')">
+                                    <img src="assets/hair-cut.png">
+                                    <p>Pelo</p>
+                                </div>
+                                <div class="btn" @click="Clothing('glasses')">
+                                    <img src="assets/sunglasses.png">
+                                    <p>Gafas</p>
+                                </div>
+                                <div class="btn" @click="Clothing('bag')">
+                                    <img src="assets/bag.png">
+                                    <p>Bolsa</p>
+                                </div>
+                                <div class="btn" @click="Clothing('ear')">
+                                    <img src="assets/ear.png">
+                                    <p>Oreja</p>
+                                </div>
+                            </div>
+                            <div class="addon-mennu" v-if="isAddonOpen && AddonID == 'person'">
+                                <div class="btn" @click="HnActionsBar('carry')">
+                                    <img src="assets/carry.png">
+                                    <p>Cargar</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('piggy')">
+                                    <img src="assets/piggy.png">
+                                    <p>caballito</p>
+                                </div>
+                                 <div class="btn" @click="HnActionsBar('thief')">
+                                    <img src="assets/thief.png">
+                                    <p>Cachear</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('editor')">
+                                    <img src="assets/editor.png">
+                                    <p>Rockstar</p>
+                                </div>
+                            </div>
+                            <div class="addon-mennu" v-if="isAddonOpen && AddonID == 'car'">
+                                <!-- VELOCIDAD -->
+                                <div class="btn" @click="HnActionsBar('limiter')">
+                                    <img src="assets/limitador.png">
+                                    <p>Limitador</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('crucero')">
+                                    <img src="assets/velocimetro.png">
+                                    <p>Crucero</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('motor')">
+                                    <img src="assets/power.png">
+                                    <p>Motor</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('trucos')">
+                                    <img src="assets/mototrick.png">
+                                    <p>Trucos</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('d_f_left')">
+                                    <img src="assets/doorFrontLeft.png">
+                                    <p>Front Left</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('d_f_right')">
+                                    <img src="assets/doorFrontRight.png">
+                                    <p>Front Right</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('hood')">
+                                    <img src="assets/frontHood.png">
+                                    <p>Hood</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('d_r_left')">
+                                    <img src="assets/doorRearLeft.png">
+                                    <p>Rear Left</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('d_r_right')">
+                                    <img src="assets/doorRearRight.png">
+                                    <p>Rear Right</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('trunk')">
+                                    <img src="assets/rearHood.png">
+                                    <p>Trunk</p>
+                                </div>
+                                <!-- Widows-->
+                                <div class="btn" @click="HnActionsBar('w_f_left')">
+                                    <img src="assets/windowFrontLeft.png">
+                                    <p>Front left</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('w_f_right')">
+                                    <img src="assets/windowFrontRight.png">
+                                    <p>Front right</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('w_r_left')">
+                                    <img src="assets/windowRearLeft.png">
+                                    <p>Rear Left</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('w_r_right')">
+                                    <img src="assets/windowRearRight.png">
+                                    <p>Rear Right</p>
+                                </div>
+                                <!-- seats-->
+                                <div class="btn" @click="HnActionsBar('s_f_left')">
+                                    <img src="assets/seat.png">
+                                    <p>Front left</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('s_f_right')">
+                                    <img src="assets/seat.png">
+                                    <p>Front right</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('s_r_left')">
+                                    <img src="assets/seat.png">
+                                    <p>Rear Left</p>
+                                </div>
+                                <div class="btn" @click="HnActionsBar('s_r_right')">
+                                    <img src="assets/seat.png">
+                                    <p>Rear Right</p>
+                                </div>
+                            </div>
+                            <div class="hud">
+                                <!-- falta setear las barras de progreso -->
+                                <i class="fa-solid fa-heart-pulse"></i>
+                                <div class="vertical-progress-bar">
+                                    <div class="progress-bar" :style="{ height: progressHealth + '%' }"></div>
+                                </div>
+                                <i class="fa-duotone fa-solid fa-utensils" style="--fa-primary-color: #f5f5f5; --fa-secondary-color: #f5f5f5;"></i>
+                                <div class="vertical-progress-bar">
+                                    <div class="progress-bar" :style="{ height: progressHunger + '%' }"></div>
+                                </div>
+                                <i class="fa-duotone fa-solid fa-droplet" style="--fa-primary-color: #f5f5f5; --fa-secondary-color: #424141;"></i>
+                                <div class="vertical-progress-bar">
+                                    <div class="progress-bar" :style="{ height: progressThirst + '%' }"></div>
+                                </div>
+                                <div v-if="progressArmor > 0">
+                                    <i class="fa-duotone fa-solid fa-shield-halved" style="--fa-primary-color: #f5f5f5; --fa-secondary-color: #7c7979;"></i>
+                                    <div class="vertical-progress-bar">
+                                        <div class="progress-bar" :style="{ height: progressArmor + '%' }"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="weight-bar">
-                            <div class="weight-bar-fill" :style="{ width: Math.min((otherInventoryWeight / otherInventoryMaxWeight) * 100, 100) + '%' }" :class="otherWeightBarClass"></div>
-                        </div>
-                    </div>
-                    <div class="inventory-grid">
-                        <div class="item-grid">
-                            <div v-for="slot in otherInventorySlots" :key="slot" class="item-slot" :data-slot="slot" @mousedown="event => handleMouseDown(event, slot, 'other')" @dragover.prevent>
-                                <div class="item-slot-img" v-if="getItemInSlot(slot, 'other')" v-tooltip.right-end="{content: generateTooltipContent(getItemInSlot(slot, 'other')), html: true}">
-                                    <img :src="'images/' + getItemInSlot(slot, 'other').image" alt="" />
+                        <div class="other_inv">
+                            <div class="other-bg-header" v-if="!isOtherInventoryEmpty">
+                                <div class="other-inventory-header" v-if="!isOtherInventoryEmpty">
+                                    <div class="labels-container">
+                                        <div class="inventory-label">
+                                            <p>{{ otherInventoryLabel }}</p>
+                                        </div>
+                                        <div class="current-weight">
+                                            <p>{{ (otherInventoryWeight / 1000).toFixed(1) }} / {{(otherInventoryMaxWeight / 1000).toFixed(1) }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="weight-bar">
+                                        <div class="weight-bar-fill" :style="{ width: Math.min((otherInventoryWeight / otherInventoryMaxWeight) * 100, 100) + '%' }" :class="otherWeightBarClass"></div>
+                                    </div>
                                 </div>
-                                <div class="item-slot-amount" v-if="getItemInSlot(slot, 'other')">
-                                    <p>x{{ getItemInSlot(slot, 'other').amount }}</p>
+                            </div>
+                            <div class="other-bg" v-if="!isOtherInventoryEmpty">
+                                <div class="other-inventory" v-if="!isOtherInventoryEmpty">
+                                    <div class="item-grid">
+                                        <div v-for="slot in otherInventorySlots" :key="slot" class="item-slot" :data-slot="slot" @mousedown="event => handleMouseDown(event, slot, 'other')" @dragover.prevent>
+                                            <div class="item-slot-img" v-if="getItemInSlot(slot, 'other')" v-tooltip.right-end="{content: generateTooltipContent(getItemInSlot(slot, 'other')), html: true}">
+                                                <img :src="'images/' + getItemInSlot(slot, 'other').image" alt="" />
+                                            </div>
+                                            <div class="item-slot-amount" v-if="getItemInSlot(slot, 'other')">
+                                                <p>x{{ getItemInSlot(slot, 'other').amount }}</p>
+                                            </div>
+                                            <div v-if="isShopInventory && getItemInSlot(slot, 'other')" class="item-price">
+                                                <p>${{ getItemInSlot(slot, 'other').price }}</p>
+                                            </div>
+                                            <div class="item-slot-durability" v-if="getItemInSlot(slot, 'other')">
+                                                <div
+                                                    class="item-slot-durability-fill"
+                                                    v-if="getItemInSlot(slot, 'other').info && 'quality' in getItemInSlot(slot, 'other').info"
+                                                    :style="{ width: (getItemInSlot(slot, 'other').info.quality / 100) * 100 + '%' }"
+                                                    :class="{
+                                                        'high': getItemInSlot(slot, 'other').info.quality > 75,
+                                                        'medium': getItemInSlot(slot, 'other').info.quality <= 75 && getItemInSlot(slot, 'other').info.quality > 25,
+                                                        'low': getItemInSlot(slot, 'other').info.quality <= 25
+                                                    }"
+                                                ></div>
+                                                <div class="item-slot-durability-fill" v-else style="width: 0%"></div>
+                                            </div>
+                                            <!-- <div class="item-slot-label" v-if="getItemInSlot(slot, 'other')">
+                                                <p>{{ getItemInSlot(slot, 'other').label }}</p>
+                                            </div> -->
+                                        </div>
+                                    </div>
                                 </div>
-                                <div v-if="isShopInventory && getItemInSlot(slot, 'other')" class="item-price">
-                                    <p>${{ getItemInSlot(slot, 'other').price }}</p>
-                                </div>
-                                <div class="item-slot-durability" v-if="getItemInSlot(slot, 'other')">
-                                    <div
-                                        class="item-slot-durability-fill"
-                                        v-if="getItemInSlot(slot, 'other').info && 'quality' in getItemInSlot(slot, 'other').info"
-                                        :style="{ width: (getItemInSlot(slot, 'other').info.quality / 100) * 100 + '%' }"
-                                        :class="{
-                                            'high': getItemInSlot(slot, 'other').info.quality > 75,
-                                            'medium': getItemInSlot(slot, 'other').info.quality <= 75 && getItemInSlot(slot, 'other').info.quality > 25,
-                                            'low': getItemInSlot(slot, 'other').info.quality <= 25
-                                        }"
-                                    ></div>
-                                    <div class="item-slot-durability-fill" v-else style="width: 0%"></div>
-                                </div>
-                                <!-- <div class="item-slot-label" v-if="getItemInSlot(slot, 'other')">
-                                    <p>{{ getItemInSlot(slot, 'other').label }}</p>
-                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -146,9 +388,9 @@
                             ></div>
                             <div class="item-slot-durability-fill" v-else style="width: 0%"></div>
                         </div>
-                        <div class="item-slot-label" v-if="getHotbarItemInSlot(slot)">
+                        <!-- <div class="item-slot-label2" v-if="getHotbarItemInSlot(slot)">
                             <p>{{ getHotbarItemInSlot(slot).label }}</p>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -157,10 +399,10 @@
                     <div class="notification-title">
                         <p>{{ notificationType }}</p>
                     </div>
-                    <div class="item-slot-img">
+                    <div class="item-slot-img2">
                         <img :src="notificationImage" alt="" />
                     </div>
-                    <div class="item-slot-amount">
+                    <div class="item-slot-amount2">
                         <p>x{{ notificationAmount }}</p>
                     </div>
                     <div class="item-slot-label">
@@ -197,7 +439,7 @@
                     <p>{{ draggedItem.label }}</p>
                 </div>
             </div>
-            <ul v-if="showContextMenu" class="context-menu" :style="{ top: contextMenuPosition.top, left: contextMenuPosition.left }">
+           <!--<ul v-if="showContextMenu" class="context-menu" :style="{ top: contextMenuPosition.top, left: contextMenuPosition.left }">
                 <li v-if="contextMenuItem.useable" @click="useItem(contextMenuItem)">Use</li>
                 <li @mouseover="showSubmenu = true" @mouseleave="showSubmenu = false">
                     Give
@@ -218,7 +460,39 @@
                 <li @click="splitAndPlaceItem(contextMenuItem, 'player')">Split</li>
                 <li v-if="contextMenuItem.name.includes('weapon_')" @click="copySerial(contextMenuItem)">Copy Serial</li>
                 <li v-if="contextMenuItem.name.includes('weapon_')" @click="openWeaponAttachments(contextMenuItem)">Attachments</li>
-            </ul>
+            </ul>-->
+            <div v-if="showContextMenu" class="context-menu" >
+                <div class="context-opt" v-if="contextMenuItem.useable" @click="useItem(contextMenuItem)">
+                    <i class="fa-solid fa-hand"></i> USAR
+                </div>                
+                <!--<div class="context-opt" @mouseover="showSubmenu = true" @mouseleave="showSubmenu = false">-->
+                <div class="context-opt" @click="giveItem(contextMenuItem, 1)" >
+                    <i class="fa-solid fa-hand-holding-hand"></i> DAR
+                   <!--<ul v-if="showSubmenu" class="submenu">
+                        <li @click="giveItem(contextMenuItem, 1)">Single</li>
+                        <li @click="giveItem(contextMenuItem, 'half')">Half</li>
+                        <li @click="giveItem(contextMenuItem, 'all')">All</li>
+                    </ul>-->
+                </div>
+                <!--<div class="context-opt" @mouseover="showSubmenu = true" @mouseleave="showSubmenu = false">-->
+                <div class="context-opt" @click="dropItem(contextMenuItem, 1)">
+                    <i class="fa-solid fa-trash"></i> BORRAR
+                    <!--<ul v-if="showSubmenu" class="submenu">
+                        <li @click="dropItem(contextMenuItem, 1)">Single</li>
+                        <li @click="dropItem(contextMenuItem, 'half')">Half</li>
+                        <li @click="dropItem(contextMenuItem, 'all')">All</li>
+                    </ul>-->
+                </div>
+                <div class="context-opt" @click="splitAndPlaceItem(contextMenuItem, 'player')">
+                    <i class="fa-solid fa-divide"></i> DIVIDIR
+                </div>
+                <div class="context-opt" v-if="contextMenuItem.name.includes('weapon_')" @click="copySerial(contextMenuItem)">
+                    <i class="fa-solid fa-copy"></i> COPIAR
+                </div>
+                <div class="context-opt" v-if="contextMenuItem.name.includes('weapon_')" @click="openWeaponAttachments(contextMenuItem)">
+                    <i class="fa-solid fa-link"></i> ACCESORIOS
+                </div>
+            </div>
         </div>
     </body>
 </html>
